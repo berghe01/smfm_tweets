@@ -38,10 +38,12 @@ ui <- tagList(
                sliderInput("choice", 
                            tags$p("Tell me the n'th most popular:", br(),
                                   "topics, hashtags, or bigrams..."), 
-                           min = 1, max = 20, value = 5, step = 1),
+                           min = 1, max = 20, value = 12, step = 1),
                
                sliderInput("timeperiod", "Limit twitter stream to last x# hours:", 
-                           min = 01, max = 36, value = 23, step = 1), # todo: limit the length of the slider by time elapsed on stream
+                           min = 0, max = 40,
+                           value = c(0, 8)
+               ), # todo: limit the length of the slider by time elapsed on stream
              ),
              mainPanel(
                tabsetPanel(
@@ -190,6 +192,8 @@ server <- function(input, output, session) {
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "@mysmfm", "forum", "booth")
     '%ni%' <- Negate('%in%')
+    timeperiod1 <- input$timeperiod[1]
+    timeperiod2 <- input$timeperiod[2]
     
     df_words <- df %>% 
       filter(App %in% sources) %>%
@@ -198,7 +202,7 @@ server <- function(input, output, session) {
     df_words <- df_words %>% 
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test <= timeperiod*60) %>%
+      filter(test >= timeperiod1*60 & test <= timeperiod2*60) %>%
       unnest_tokens(word, `Tweet Text`, token = "tweets") %>%
       anti_join(stop_words, by = "word") %>% 
       filter(word %ni% mystop) %>%
@@ -246,6 +250,8 @@ server <- function(input, output, session) {
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "@mysmfm")
     '%ni%' <- Negate('%in%')
+    timeperiod1 <- input$timeperiod[1]
+    timeperiod2 <- input$timeperiod[2]
 
     df_hash <- df %>% 
       filter(App %in% sources) %>%
@@ -254,7 +260,7 @@ server <- function(input, output, session) {
     df_hash <- df_hash %>%
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test <= timeperiod*60) %>%
+      filter(test >= timeperiod1*60 & test <= timeperiod2*60) %>%
       unnest_tokens(word, `Tweet Text`, token = "tweets") %>%
       anti_join(stop_words, by = "word") %>% 
       filter(word %ni% mystop) %>%
@@ -302,6 +308,8 @@ server <- function(input, output, session) {
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "mfm", "@mysmfm")
     '%ni%' <- Negate('%in%')
+    timeperiod1 <- input$timeperiod[1]
+    timeperiod2 <- input$timeperiod[2]
   
     df_bigram <- df %>% 
       filter(App %in% sources) %>%
@@ -312,7 +320,7 @@ server <- function(input, output, session) {
     df_bigram <- df_bigram %>%
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test <= timeperiod*60) %>%
+      filter(test >= timeperiod1*60 & test <= timeperiod2*60) %>%
       unnest_tokens(hashes, `Tweet Text`, token = "ngrams", n = 2) %>% 
       separate(hashes, into = c("first","second"), sep = " ", remove = FALSE) %>% 
       anti_join(stop_words, by = c("first" = "word")) %>%
@@ -362,6 +370,7 @@ server <- function(input, output, session) {
     timeperiod <- input$timeperiod
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     smfm_hashes <- c("#smfm20")
+
     
     series_df <- df %>% 
       filter(App %in% sources) %>%
