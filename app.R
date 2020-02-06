@@ -24,7 +24,7 @@ ui <- tagList(
                     ),
                   
                     br(),
-                    "Click below to refresh the live stream - new tweets are pulled every hour"),
+                    "Click below to refresh the live stream - new tweets are pulled every hour!"),
              
              actionButton(inputId='refresh', label="Refresh tweets", 
                           icon = icon("redo"), 
@@ -127,10 +127,10 @@ ui <- tagList(
                                       br(),
                                       "Of note, all tweets were collected with the Google Sheet add-on",
                                       tags$a(href = "https://gsuite.google.com/marketplace/app/tweet_archiver/976886281542", " Twitter-Archiver. "),
-                                      "Tweets were limited to individuals using the following services: Twitter for Android, Twitter for iPad, Twitter for iPhone, and TweetDeck.",
+                                      "Tweets were limited to individuals using the following services: Twitter for Android, Twitter for iPad, Twitter for iPhone, TweetDeck and Twitter Web App.",
                                       br(),
                                       br(),
-                                      "The following packages were used extensviely in the creation of this app: ",
+                                      "The following packages were used extensively in the creation of this app: ",
                                       tags$a(href = "https://shiny.rstudio.com/", "{shiny},"), 
                                       tags$a(href = "https://www.tidyverse.org/", " {tidyverse},"), 
                                       tags$a(href = "https://cran.r-project.org/web/packages/tidytext/vignettes/tidytext.html", " {tidytext},"), 
@@ -186,7 +186,7 @@ server <- function(input, output, session) {
     
     choice <- input$choice 
     timeperiod <- input$timeperiod
-    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck") 
+    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "@mysmfm", "forum", "booth")
     '%ni%' <- Negate('%in%')
@@ -198,7 +198,7 @@ server <- function(input, output, session) {
     df_words <- df_words %>% 
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test <= timeperiod) %>%
+      filter(test <= timeperiod*60) %>%
       unnest_tokens(word, `Tweet Text`, token = "tweets") %>%
       anti_join(stop_words, by = "word") %>% 
       filter(word %ni% mystop) %>%
@@ -242,7 +242,7 @@ server <- function(input, output, session) {
     
     choice <- input$choice 
     timeperiod <- input$timeperiod
-    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck") 
+    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "@mysmfm")
     '%ni%' <- Negate('%in%')
@@ -254,7 +254,7 @@ server <- function(input, output, session) {
     df_hash <- df_hash %>%
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test <= timeperiod) %>%
+      filter(test <= timeperiod*60) %>%
       unnest_tokens(word, `Tweet Text`, token = "tweets") %>%
       anti_join(stop_words, by = "word") %>% 
       filter(word %ni% mystop) %>%
@@ -298,7 +298,7 @@ server <- function(input, output, session) {
     
     choice <- input$choice 
     timeperiod <- input$timeperiod
-    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck") 
+    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "mfm", "@mysmfm")
     '%ni%' <- Negate('%in%')
@@ -312,7 +312,7 @@ server <- function(input, output, session) {
     df_bigram <- df_bigram %>%
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test <= timeperiod) %>%
+      filter(test <= timeperiod*60) %>%
       unnest_tokens(hashes, `Tweet Text`, token = "ngrams", n = 2) %>% 
       separate(hashes, into = c("first","second"), sep = " ", remove = FALSE) %>% 
       anti_join(stop_words, by = c("first" = "word")) %>%
@@ -360,16 +360,16 @@ server <- function(input, output, session) {
     
     choice <- input$choice 
     timeperiod <- input$timeperiod
-    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck") 
+    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     smfm_hashes <- c("#smfm20")
     
     series_df <- df %>% 
       filter(App %in% sources) %>%
-      mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(60*60*6))
+      mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(60*6))
     
   
     series_df <- series_df %>%
-      mutate(Date = round_date(Date, unit = "hour")) %>% 
+      mutate(Date = floor_date(Date, unit = "hour")) %>% 
       unnest_tokens(hashes, `Tweet Text`, token = "tweets") %>% 
       filter(hashes %in% smfm_hashes) %>% # select only hases of importance
       group_by(Date, hashes) %>% 
@@ -424,15 +424,15 @@ server <- function(input, output, session) {
     retweet_choice <- input$retweet_choice
     timechoice1 <- input$timechoice[1]
     timechoice2 <- input$timechoice[2]
-    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck") 
+    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
 
 
     df %>% 
       filter(App %in% sources) %>%
-      mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60*60)) %>%
+      mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60)) %>%
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test >= timechoice1 & test <= timechoice2) %>%
+      filter(test >= timechoice1*60 & test <= timechoice2*60) %>%
       select(Date, id = `Tweet ID`, screenname = `Screen Name`, text = `Tweet Text`, Retweets, 
              #URL
              ) %>%
@@ -483,14 +483,14 @@ server <- function(input, output, session) {
     retweet_choice <- input$retweet_choice
     timechoice1 <- input$timechoice[1]
     timechoice2 <- input$timechoice[2]
-    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck") 
+    sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     
     df %>% 
       filter(App %in% sources) %>%
-      mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60*60)) %>%
+      mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60)) %>%
       mutate(test = Sys.time() - Date, 
              test = as.numeric(test)) %>%
-      filter(test >= timechoice1 & test <= timechoice2) %>%
+      filter(test >= timechoice1*60 & test <= timechoice2*60) %>%
       select(Date, id = `Tweet ID`, screenname = `Screen Name`, text = `Tweet Text`, Favorites, 
              #URL
       ) %>%
