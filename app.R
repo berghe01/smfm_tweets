@@ -163,12 +163,7 @@ server <- function(input, output, session) {
     fileData()
   })
   
-  # output$data <- renderTable({
-  #   oldData()
-  # })
-  
-  
-  # word plot ----
+
   
   output$word_plot <- renderHighchart({
     
@@ -234,14 +229,7 @@ server <- function(input, output, session) {
     df[1,17] <- "geotag"
     names(df) <- df[1,]
     df <- df[-1,]
-    
-    # df2 <- oldData()
-    # df2[1,17] <- "geotag"
-    # names(df2) <- df2[1,]
-    # df2 <- df2[-1,]
-    
-    #df <- rbind(df, df2)
-    
+
     choice <- input$choice 
     timeperiod <- input$timeperiod
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
@@ -291,13 +279,6 @@ server <- function(input, output, session) {
     df[1,17] <- "geotag"
     names(df) <- df[1,]
     df <- df[-1,]
-    
-    # df2 <- oldData()
-    # df2[1,17] <- "geotag"
-    # names(df2) <- df2[1,]
-    # df2 <- df2[-1,]
-    
-    #df <- rbind(df, df2)
     
     choice <- input$choice 
     timeperiod <- input$timeperiod
@@ -355,13 +336,6 @@ server <- function(input, output, session) {
     names(df) <- df[1,]
     df <- df[-1,]
     
-    # df2 <- oldData()
-    # df2[1,17] <- "geotag"
-    # names(df2) <- df2[1,]
-    # df2 <- df2[-1,]
-    
-    #df <- rbind(df, df2)
-    
     choice <- input$choice 
     timeperiod <- input$timeperiod
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
@@ -417,15 +391,7 @@ server <- function(input, output, session) {
     df[1,17] <- "geotag"
     names(df) <- df[1,]
     df <- df[-1,]
-    
-    # df2 <- oldData()
-    # df2[1,17] <- "geotag"
-    # names(df2) <- df2[1,]
-    # df2 <- df2[-1,]
-    
-    #df <- rbind(df, df2)
-    
-    
+  
     retweet_choice <- input$retweet_choice
     timechoice <- input$timechoice
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
@@ -476,13 +442,7 @@ server <- function(input, output, session) {
     df[1,17] <- "geotag"
     names(df) <- df[1,]
     df <- df[-1,]
-    
-    # df2 <- oldData()
-    # df2[1,17] <- "geotag"
-    # names(df2) <- df2[1,]
-    # df2 <- df2[-1,]
-    
-    #df <- rbind(df, df2)
+   
     
     retweet_choice <- input$retweet_choice
     timechoice <- input$timechoice
@@ -532,3 +492,4 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui, server)
+  
