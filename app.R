@@ -22,9 +22,11 @@ ui <- tagList(
                                 tags$a(href = "https://twitter.com/search?q=%23mysmfm&src=typed_query", "#mysmfm"), ", ",
                                 tags$a(href = "https://twitter.com/search?q=%23smfm20&src=typed_query", "#smfm20"), ".")
                     ),
-                  
+                    
                     br(),
-                    "Click below to refresh the live stream - new tweets are pulled every hour!"),
+                    "Click below to refresh the live stream - new tweets are pulled every hour!", 
+                    br(),
+                    "Of note, since the conference ended, time has been frozen at 2/8/2020 14:00 CST"),
              
              actionButton(inputId='refresh', label="Refresh tweets", 
                           icon = icon("redo"), 
@@ -37,31 +39,33 @@ ui <- tagList(
                
                sliderInput("choice", 
                            tags$p("Tell me the n'th most popular:", br(),
-                                  "topics, hashtags, or bigrams..."), 
+                                  "bigrams, topics, or hashtags"), 
                            min = 1, max = 20, value = 12, step = 1),
                
                sliderInput("timeperiod", 
                            "Limit twitter stream to last x# hours:", 
                            min = 0, max = 40, value = 5, step =2 )
-                
+               
              ),
              mainPanel(
                tabsetPanel(
                  
-                 tabPanel("Trending hashtags", 
-                          highchartOutput("hash_plot", height = "500px"),
-                          h5("Excludes some of the most common hashtags: #smfm, #mysmfm, #smfm20, #smfm2020...")),
-                 
                  tabPanel("Trending bigrams",
                           highchartOutput("bigram_plot", height = "500px"),
                           h5("Excludes some of the most common hashtags: #smfm, #mysmfm, #smfm20, #smfm2020...")),
-                
-                  tabPanel("Trending topics",
+                 
+                 tabPanel("Trending topics",
                           highchartOutput("word_plot", height = "500px"), 
-                          h5("Excludes some of the most common hashtags/words: #smfm, #mysmfm, #smfm20, #smfm2020..."))
+                          h5("Excludes some of the most common hashtags/words: #smfm, #mysmfm, #smfm20, #smfm2020...")),
+                 
+                 tabPanel("Trending hashtags", 
+                          highchartOutput("hash_plot", height = "500px"),
+                          h5("Excludes some of the most common hashtags: #smfm, #mysmfm, #smfm20, #smfm2020..."))
                  
                  
- 
+                 
+                 
+                 
                  
                )
              )
@@ -84,11 +88,11 @@ ui <- tagList(
                sliderInput("retweet_choice", 
                            tags$p("Tell me the n'th most retweet-ed/favorited tweets:"), 
                            min = 1, max = 25, value = 15, step = 3),
-
+               
                sliderInput("timechoice",
                            tags$p("Select how many hours you would like to look in past"),
                            min = 0, max = 40, value = 10, step = 2)
-                           
+               
              ),
              
              br(),
@@ -163,7 +167,12 @@ server <- function(input, output, session) {
     fileData()
   })
   
-
+  # output$data <- renderTable({
+  #   oldData()
+  # })
+  
+  
+  # word plot ----
   
   output$word_plot <- renderHighchart({
     
@@ -186,14 +195,14 @@ server <- function(input, output, session) {
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "@mysmfm", "forum", "booth")
     '%ni%' <- Negate('%in%')
-
+    
     
     df_words <- df %>% 
       filter(App %in% sources) %>%
       mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60))
     
     df_words <- df_words %>% 
-      mutate(test = Sys.time() - Date, 
+      mutate(test = ymd_hm("2020-02-08 14:00 CST") - Date, 
              test = as.numeric(test)) %>%
       filter(test <= timeperiod*60) %>%
       unnest_tokens(word, `Tweet Text`, token = "tweets") %>%
@@ -217,7 +226,7 @@ server <- function(input, output, session) {
       hc_yAxis(tickInterval = 1, min = min(df_words$n-2), max = max(df_words$n+1),
                showLastLabel = FALSE, 
                showFirstLabel = FALSE) 
-      
+    
     
   })
   
@@ -229,21 +238,28 @@ server <- function(input, output, session) {
     df[1,17] <- "geotag"
     names(df) <- df[1,]
     df <- df[-1,]
-
+    
+    # df2 <- oldData()
+    # df2[1,17] <- "geotag"
+    # names(df2) <- df2[1,]
+    # df2 <- df2[-1,]
+    
+    #df <- rbind(df, df2)
+    
     choice <- input$choice 
     timeperiod <- input$timeperiod
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "@mysmfm")
     '%ni%' <- Negate('%in%')
-
-
+    
+    
     df_hash <- df %>% 
       filter(App %in% sources) %>%
       mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60))
-      
+    
     df_hash <- df_hash %>%
-      mutate(test = Sys.time() - Date, 
+      mutate(test = ymd_hm("2020-02-08 14:00 CST") - Date, 
              test = as.numeric(test)) %>%
       filter(test <= timeperiod*60) %>%
       unnest_tokens(word, `Tweet Text`, token = "tweets") %>%
@@ -280,22 +296,29 @@ server <- function(input, output, session) {
     names(df) <- df[1,]
     df <- df[-1,]
     
+    # df2 <- oldData()
+    # df2[1,17] <- "geotag"
+    # names(df2) <- df2[1,]
+    # df2 <- df2[-1,]
+    
+    #df <- rbind(df, df2)
+    
     choice <- input$choice 
     timeperiod <- input$timeperiod
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     mystop <- c("smfm", "mysmfm", "smfm20", "smfm2020", "#smfm", "#mysmfm", "#smfm20", "#smfm2020", 
                 "rt", "md", "dr", "mfm", "@mysmfm")
     '%ni%' <- Negate('%in%')
-
-  
+    
+    
     df_bigram <- df %>% 
       filter(App %in% sources) %>%
       mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60))
-      
+    
     # help from this site: https://www.r-bloggers.com/how-to-create-unigrams-bigrams-and-n-grams-of-app-reviews/
     
     df_bigram <- df_bigram %>%
-      mutate(test = Sys.time() - Date, 
+      mutate(test = ymd_hm("2020-02-08 14:00 CST") - Date, 
              test = as.numeric(test)) %>%
       filter(test <= timeperiod*60) %>%
       unnest_tokens(hashes, `Tweet Text`, token = "ngrams", n = 2) %>% 
@@ -336,19 +359,27 @@ server <- function(input, output, session) {
     names(df) <- df[1,]
     df <- df[-1,]
     
+    # df2 <- oldData()
+    # df2[1,17] <- "geotag"
+    # names(df2) <- df2[1,]
+    # df2 <- df2[-1,]
+    
+    #df <- rbind(df, df2)
+    
     choice <- input$choice 
     timeperiod <- input$timeperiod
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
     smfm_hashes <- c("#smfm20")
-
+    
     
     series_df <- df %>% 
       filter(App %in% sources) %>%
       mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(60*6))
     
-  
+    
     series_df <- series_df %>%
       mutate(Date = floor_date(Date, unit = "hour")) %>% 
+      filter(Date < ymd_hm("2020-02-08 14:00 CST")) %>%
       unnest_tokens(hashes, `Tweet Text`, token = "tweets") %>% 
       filter(hashes %in% smfm_hashes) %>% # select only hases of importance
       group_by(Date, hashes) %>% 
@@ -391,21 +422,29 @@ server <- function(input, output, session) {
     df[1,17] <- "geotag"
     names(df) <- df[1,]
     df <- df[-1,]
-  
+    
+    # df2 <- oldData()
+    # df2[1,17] <- "geotag"
+    # names(df2) <- df2[1,]
+    # df2 <- df2[-1,]
+    
+    #df <- rbind(df, df2)
+    
+    
     retweet_choice <- input$retweet_choice
     timechoice <- input$timechoice
     sources <- c("Twitter for Android", "Twitter for iPad", "Twitter for iPhone", "TweetDeck", "Twitter Web App") 
-
-
+    
+    
     df %>% 
       filter(App %in% sources) %>%
       mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60)) %>%
-      mutate(test = Sys.time() - Date, 
+      mutate(test = ymd_hm("2020-02-08 14:00 CST") - Date, 
              test = as.numeric(test)) %>%
       filter(test <= timechoice*60) %>%
       select(Date, id = `Tweet ID`, screenname = `Screen Name`, text = `Tweet Text`, Retweets, 
              #URL
-             ) %>%
+      ) %>%
       filter(Retweets >0) %>%
       arrange(desc(Retweets)) %>%
       head(retweet_choice) %>%
@@ -417,11 +456,11 @@ server <- function(input, output, session) {
         useHTML = TRUE,
         headerFormat = "<b>{point.key}</b>",
         pointFormat = paste("<b> ({point.Retweets} retweets)<br><br></b>",
-                        # "<p><img src = {point.URL}
-                        # width= '40'; 
-                        # height = '40'; 
-                        # style = 'border-radius:50%;'
-                        # align = 'left'/><br></p>",
+                            # "<p><img src = {point.URL}
+                            # width= '40'; 
+                            # height = '40'; 
+                            # style = 'border-radius:50%;'
+                            # align = 'left'/><br></p>",
                             "<p>{point.text}</p>")
       ) %>%
       hc_title(text = paste("Number of re-tweets over 1 hour at SMFM20"), margin = 5, align = "left") %>%
@@ -442,7 +481,13 @@ server <- function(input, output, session) {
     df[1,17] <- "geotag"
     names(df) <- df[1,]
     df <- df[-1,]
-   
+    
+    # df2 <- oldData()
+    # df2[1,17] <- "geotag"
+    # names(df2) <- df2[1,]
+    # df2 <- df2[-1,]
+    
+    #df <- rbind(df, df2)
     
     retweet_choice <- input$retweet_choice
     timechoice <- input$timechoice
@@ -451,7 +496,7 @@ server <- function(input, output, session) {
     df %>% 
       filter(App %in% sources) %>%
       mutate(Date = dmy_hm(Date, tz = "America/Chicago")-(6*60)) %>%
-      mutate(test = Sys.time() - Date, 
+      mutate(test = ymd_hm("2020-02-08 14:00 CST") - Date, 
              test = as.numeric(test)) %>%
       filter(test <= timechoice*60) %>%
       select(Date, id = `Tweet ID`, screenname = `Screen Name`, text = `Tweet Text`, Favorites, 
@@ -492,4 +537,3 @@ server <- function(input, output, session) {
 
 
 shinyApp(ui, server)
-  
